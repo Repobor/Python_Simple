@@ -12,7 +12,10 @@ def clean(contents):
                            "https：//www.miaoshuwu.cc/最快更新！无广告！",
                            "首发网址ｈｔｔps://m.miaoshuｗｕ.ｃｃ",
                            "天才一秒记住本站地址：[秒书屋]",
-                           "https://www.miaoshuwu.cc/最快更新！无广告！"]
+                           "https://www.miaoshuwu.cc/最快更新！无广告！",
+                           "一秒记住ｈｔｔｐs://ｍ．miaoｓｈｕｗｕ．ｃc",
+                           "v,i,p完整章节请访问www.kshu08.com",
+                           "@本站开始更新这本书，@喜欢看本书的读友请添加收藏哦O(∩_∩)O~w.w.w.kshu08.c.o.m！！"]
     for each in keywords:
         result = result.replace(each,'')
     return result
@@ -24,7 +27,16 @@ def getcontent(url):
     # content_soup.find('div',id='content')
     # p_list = content_soup.find('div',id='content').find_all('p')
     content = content_soup.find('div',id='content').text
-    content = "\r\n".join(content.split())
+    if(content.find('本章未完，点击下一页继续阅读')>0):
+        # 说明有第二页内容 拼接URL获取第二页
+        tmp_url = url[:-5]+'_2.html'
+        response = requests.get(tmp_url,headers=headers)
+        response.encoding = response.apparent_encoding
+        content_soup2 = BeautifulSoup(response.text, "lxml")
+        content2 = content_soup2.find('div',id='content').text
+        content = content + '\n' + content2
+        content = content.replace('-->>本章未完，点击下一页继续阅读','')
+    content = "\n".join(content.split())
     #净化
     content = clean(content)
     return content
@@ -48,9 +60,20 @@ if __name__ == "__main__":
         if(url2[0] == "/"):
             tra=parse.scheme+"://"+parse.netloc
         #print (tra + url2)
-        thiscontent = text +'\r\n' + getcontent(tra + url2)
-        allcontent = allcontent + '\r\n' + thiscontent
+        thiscontent = text +'\n' + getcontent(tra + url2)
+        allcontent = allcontent + '\n' + thiscontent + '\n'
     filename = '%s.txt' % info
-    allcontent = info +'\r\n'+ allcontent
+    allcontent = info +'\n'+ allcontent
+    #统一换行符
+    eachline = allcontent.split('\n')
+    allcontent2 = ''
+    i=0
+    for each in eachline:
+        each.replace('\r\n','\n').replace('\r','\n')
+        if(i == 0):
+            allcontent2 = each
+        else:
+            allcontent2 = allcontent2 + '\n' + each
+        i +=1
     with open(filename, 'w',encoding='utf-8') as file_object:
-        file_object.write(allcontent)
+        file_object.write(allcontent2)
